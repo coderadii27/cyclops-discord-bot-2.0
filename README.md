@@ -37,6 +37,15 @@ An all-in-one esports management Discord bot built in **pure JavaScript** with `
 - Giveaway system with button entry & random winner selection
 - Random meme command
 
+### 🎫 Ticket System
+- One-command setup with `/ticketsetup channel:#support staff_role:@Staff category:Tickets`
+- Posts a clean public ticket panel with **Open Ticket** button
+- Each ticket creates a **private channel** visible only to the user, the staff role, and admins
+- **Claim button** — staff/admin can claim a ticket; their name appears on the button
+- **Close button** — auto-deletes the ticket channel after 5 seconds
+- Auto-numbered (`ticket-1-username`, `ticket-2-username`, …)
+- One open ticket per user (prevents spam)
+
 ### 🏆 Tournament Manager
 - **Unlimited tournaments** running in parallel
 - One-click category creation with all tournament channels
@@ -186,12 +195,30 @@ Reliable. Efficient. Completely free.
 | `/nuke` | Clone & delete the current channel |
 | `/idpdmcaptains tournament:... room_id:... password:...` | DM IDP details to all team captains |
 | `/slot-list tournament:...` | Post the public slot list |
+| `/ticketsetup channel:#support staff_role:@Staff category:Tickets` | Configure & post the ticket panel |
 
 ### Greet Placeholders
 Inside a greet message you can use:
 - `{user}` — mentions the new member
 - `{server}` — server name
 - `{count}` — total member count
+
+---
+
+## 🎫 Ticket System Workflow
+
+1. Run `/ticketsetup` once and provide:
+   - `channel` — the public channel where the ticket panel will live (e.g. `#support`)
+   - `staff_role` — the role allowed to view, claim and close tickets (e.g. `@Staff`)
+   - `category` — the category where new ticket channels will be created (e.g. `Tickets`)
+2. The bot posts a public **🎫 Need Help? Open a Ticket** panel in the chosen channel.
+3. When a user clicks **Open Ticket**:
+   - A new private channel `ticket-<n>-<username>` is created in your tickets category.
+   - Visible **only** to the user, the staff role, and any role with Administrator permission.
+   - A welcome embed pings the user and the staff role, with **Claim** and **Close** buttons.
+4. **Claim** — only staff/admins can claim. The button updates to `Claimed by <Name> (Admin/Staff)` and is disabled.
+5. **Close** — only the ticket owner, staff, or admins can close. The channel is auto-deleted after 5 seconds.
+6. Each user can only have **one open ticket at a time** (prevents abuse).
 
 ---
 

@@ -1,5 +1,6 @@
 import { errorEmbed } from '../utils/embeds.js';
 import { handleTournamentButton, handleTournamentSelect, handleTournamentModal } from '../tournament/handlers.js';
+import { handleTicketOpen, handleTicketClaim, handleTicketClose } from '../tickets/handlers.js';
 
 export async function handleInteraction(interaction, client) {
   try {
@@ -27,6 +28,18 @@ export async function handleInteraction(interaction, client) {
       if (interaction.customId.startsWith('giveaway:')) {
         const { handleGiveawayButton } = await import('../slashCommands/gstart.js');
         await handleGiveawayButton(interaction, client);
+        return;
+      }
+      if (interaction.customId === 'ticket:open') {
+        await handleTicketOpen(interaction);
+        return;
+      }
+      if (interaction.customId === 'ticket:claim') {
+        await handleTicketClaim(interaction);
+        return;
+      }
+      if (interaction.customId === 'ticket:close') {
+        await handleTicketClose(interaction);
         return;
       }
     }

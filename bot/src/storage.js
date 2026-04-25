@@ -31,6 +31,8 @@ function defaultGuildData() {
     slotManagerChannelId: null,
     slotListChannelId: null,
     idpChannelId: null,
+    ticket: null,
+    tickets: {},
   };
 }
 
