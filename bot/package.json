@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "discord.js": "^14.16.3",
+    "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
     "ms": "^2.1.3"
   }

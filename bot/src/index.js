@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Client, GatewayIntentBits, Partials, Collection, ActivityType, Events, PresenceUpdateStatus } from 'discord.js';
 import fs from 'node:fs';
 import path from 'node:path';
