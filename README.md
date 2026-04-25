@@ -177,7 +177,8 @@ Reliable. Efficient. Completely free.
 | `?mc @user` | Show user's total tracked messages |
 | `?setup` | Create tournament moderator + IDP roles |
 | `?t` | Open the tournament panel |
-| `?help` | Show all commands |
+| `?sync` | **(Admin/Owner)** Re-register all slash commands instantly in this server + globally |
+| `?help` | Modern interactive help menu with category dropdown |
 
 ### Slash Commands (`/`)
 

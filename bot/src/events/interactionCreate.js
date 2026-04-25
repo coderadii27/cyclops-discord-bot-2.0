@@ -49,6 +49,15 @@ export async function handleInteraction(interaction, client) {
         await handleTournamentSelect(interaction, client);
         return;
       }
+      if (interaction.customId === 'help:select') {
+        const { buildHelpEmbed, buildHelpComponents } = await import('../commands/help.js');
+        const id = interaction.values[0];
+        await interaction.update({
+          embeds: [buildHelpEmbed(id, client, interaction.guild)],
+          components: buildHelpComponents(id),
+        });
+        return;
+      }
     }
 
     if (interaction.isModalSubmit()) {
