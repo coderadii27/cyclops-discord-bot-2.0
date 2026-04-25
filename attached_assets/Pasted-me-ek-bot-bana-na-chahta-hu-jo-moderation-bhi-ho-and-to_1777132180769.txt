@@ -1,0 +1,113 @@
+me ek bot bana na chahta hu jo moderation bhi ho and tournaments manage krne me help kare usme ye ye features hone chahiye jaise 
+
+IMPORTANT NOTE :- ye bot sirf javascript me bane chahiye aur kisi langauge me nhi please koi error mat krna matlab ki koi bhi slash commands double na dikhe and mene hindi me text bheja h tum aache samjh lena aur bot me hindi ya hinglish use mat krna only english
+
+?ban user reason
+?kick user reason
+?mute time-sec,min,hr,day
+?warn user reason
+?unmute user reason
+?warning user 
+?afk reason , and jab bhi user reply kre toh afk remove and wo kitne der ke liye afk tha woh time
+?purge <1-100> This command deletes messages in bulk.
+?purge user
+?say 
+?stick reply message stick hojyega uss channel me jis channel me ye command use hua and haar 50 messages ke baad wo baad aaye jo stick hua ho
+?stickinfo (isme dikh jaye kya kya konse channel me message stick hue h and me select krke wo sticky message delete kr saku)
+?lock channel jiss chanel me ye dalu wo channel hee lock ho ,
+?unlock channel jiss channel me dalu wahi channel unlock ho and bass lock,unlock ho bot ka koi message na aaye 
+?ping kru toh bot ka status with ms aaye 
+?setnick @user user ka nickname change ho jayega server me sirf 
+?mc (user kitne totla messages h iss server me)
+
+ye sab bass "?" prefix commands me hone chahiye and 
+
+Create a channel called:
+mod-logs using /modlog cmd to
+Log these actions:
+• bans
+• kicks
+• mutes
+• warnings
+• message purges
+Each log should include:
+User
+Moderator
+Reason
+Time
+
+UI
+Use Discord embeds for all bot responses.
+Use colors:
+Red for punishments
+Green for success
+Yellow for warnings
+
+/greet new_channel: message: message_delete_time_in sec0:
+/greet off 
+/gstart for giveaway like (/gstart duration: winners: prize:) react with animated tick emoji
+/gend (giveaway id) for end giveaway 
+/memes random mems images 
+/greetdm message like title , discription shitf+enter se niche space ho
+/botinfo display bot infi like "Created by :  
+Total servers : 11678
+Serving total : 8097623 members
+Bot created on : "
+/nuke channel
+
+
+and mujhe iss bot se tournaments karwane he to ye ye features rehne banao 
+agar me "?setup" likhu to bot ek role bana de "cyclops-turney-mod" toh wo channel sirf admin and tournament moderator ko dikhe and ye krne ke baad user jab "?t" kare toh ek panel khule and cyclops Tournament Manager 
+Click 'Create channles' to get started! 
+CYCLOPS Tourney Allows Unlimited Tournaments. and niche options aaye create channels ,create tournaments, edit settings,start/pause registration, manage groups,manaually add slot, slot manager channel, ms excle file and create channel krne ke baad hee ye options khule",create tournaments, edit settings,start/pause registration, manage groups,manaually add slot, slot manager channel, ms excle file" and create channels click krne ke baad  create category aaye to user name de category ---- to fir uss category me ye ye channels automatticaly khul jaye " 
+⁠updates 
+⁠info 
+⁠rules
+⁠roadmap 
+schedule 
+⁠how-to-register 
+⁠tag-check 
+⁠register-here 
+⁠confirm-teams 
+⁠Query
+point-table
+slot-list" and everyone ke liye send message band ho har created channels me and create tournament me phele aapne tournament ka name denge toh uss tournament me ye sab hoga to aagr ham bhot se tournament ek sath kare toh pata chale kon kon sa hora h to usse ham edit kr sake  matlb ke ek tournament hora ho wex mobile aur ek hora ho bgmi ek sath bhot tournament kr sake bass panel me pata chal jaye konsa tournament hame abhi start krna ha ya kuch edit krna h and channels create krne se phele ek set channel prefix aaye to user example perfix me "wex" likhe to sare channle ke prefix me jo name diyaga wo aaye like "wex-updates.wex-info" iss trah and bot haar channel ke name ke hisab se msg krde jab channel created ho turant like in info channel- "Tournament Information
+Find all tournament details, format, and general information here.
+CYCLOPS Tournament System•Today at 20:06"
+
+and slot-manager-channel click krne pe ek channel khul jaye and  
+Tournament Slot Manager - Cyclops-tourny 
+• Click Cancel My Slot below to cancel your slot.
+• Click My Slots to get info about all your slots.
+• Click Change Team Name if you want to update your team's name.
+
+Note that slot cancel is irreversible.
+Today at 20:12  
+
+and tournament ka slot , per team kitne members ho ye bhi dal sake and registration channel me jiska 1st me tag hoga ussi ko @idp-access ka role milega and idp-channel banega toh sirf admin , idp-access, moderator hee deakh aaye uss channel ko  jab confirm teams me message aaye and ek /idpdmCaptains cmds ho to bot 1st tag wale ko idp dm kr sake id, pass 
+
+and ms excle file button jo ha ussse click kare toh Choose Tournament To Export
+Select a tournament to export Excel file from the dropdown below to jo confirm teams hongi unki team name and members tag ms excel file me dal de and link dede 
+
+and jab tournament pause ho to simple message aaye " 'tournament name' registration paused."
+and jab resume ho to " 'tournament name'registration resume." and confirm team bass user deakh sake msg na bhej sake 
+
+and jitne slot diye ho jb admin ko deakha ho uss tournament ko select krke  wo users ko /slot-list cmd to ek channel ban jaye user sirf deakh sake msg na kr sake and usme dikahye bot  like "tournament name ---- - 
+Slot 01  ->  Team Igt Esports
+Slot 02  ->  Team Frux Esports" etc.. jaise jaise slots fill hote rehe and iske niche refresh ks button ho taki jab koi team slot me add ho to refresh krne pe turant dikh jaye  
+and ye jab channel create ho to sirf user help-desk channel me hee msg karne ka permission mile bake created channel me sirf users deakh sake 
+
+and ui,ux bhot aaache se bana na taki smoothly koi bhi easy tarike se tournaments manage kr sake 
+and bot ka live status DND set ho and status chane hota rahe like " "Watching total User's(bot jitne bhi servers me sab servers ke memebers jod ke show ho) & (total exact servers jitne servers me bot add ha) Server' , with ?setup | ?help , made with 💗by aditya " ye bio status change hote rahe 6-7 sec pe 
+
+and ek ?help isme saare bot me comds bata dena kya kya featurs ha ek dam mast ui and ux ke saath
+and bot ke discription me ye dal dena **CYCLOPS — Automate Your Tournaments** 
+
+An all-in-one esports management bot designed to streamline everything — from moderation to tournament organization.
+
+**Organize like a pro. Elevate your esports experience.**
+
+Reliable. Efficient. Completely free.
+
+
+ sab ka ui and ux aacha banna and i repeat it ye bot sirf javascript me banne chahiye sirf JS
