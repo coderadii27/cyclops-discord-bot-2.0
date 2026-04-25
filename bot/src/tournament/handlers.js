@@ -323,9 +323,11 @@ export async function handleTournamentModal(interaction, client) {
 
     // Initialize slot-list channel for this tournament
     await refreshSlotListMessage(interaction.guild, data, data.tournaments[tid]).catch(() => {});
+    // Post how-to-register info with the per-team format
+    await postHowToRegisterInfo(interaction.guild, data, data.tournaments[tid]).catch(() => {});
 
     return interaction.reply({ embeds: [successEmbed(
-      `🏆 **${name}** created!\n• Slots: ${slotsTotal}\n• Per team: ${perTeam}\n• Category: <#${cat.categoryId}>\n\nUse the panel to start registration.`,
+      `🏆 **${name}** created!\n• Slots: ${slotsTotal}\n• Per team: ${perTeam}\n• Category: <#${cat.categoryId}>\n\nThe **how-to-register** channel has been updated with the registration format.\nUse the panel to start registration.`,
       '✅ Tournament Created',
     )], ephemeral: true });
   }
@@ -339,6 +341,7 @@ export async function handleTournamentModal(interaction, client) {
     t.perTeam = parseInt(interaction.fields.getTextInputValue('tPerTeam'), 10) || t.perTeam;
     await saveGuildData(interaction.guild.id);
     await refreshSlotListMessage(interaction.guild, data, t).catch(() => {});
+    await postHowToRegisterInfo(interaction.guild, data, t).catch(() => {});
     return interaction.reply({ embeds: [successEmbed(`Updated **${t.name}**.`, '⚙️ Settings Saved')], ephemeral: true });
   }
 
@@ -527,6 +530,50 @@ async function buildExcel(guild, tournament) {
   return Buffer.from(buf);
 }
 
+export async function postHowToRegisterInfo(guild, data, tournament) {
+  const cat = data.tournamentCategories[tournament.categoryId];
+  if (!cat) return;
+  const ch = guild.channels.cache.get(cat.channels['how-to-register']);
+  if (!ch) return;
+
+  const samplePlayers = Array.from({ length: tournament.perTeam }, (_, i) => `@Player${i + 1}`).join('\n');
+  const regCh = cat.channels['register-here'];
+
+  const embed = new EmbedBuilder()
+    .setColor(COLORS.PURPLE)
+    .setTitle(`📝 How to Register — ${tournament.name}`)
+    .setDescription(
+      `**Team Size:** ${tournament.perTeam} players per team\n` +
+      `**Total Slots:** ${tournament.slotsTotal}\n\n` +
+      `**Where:** <#${regCh}>\n\n` +
+      `**Required Format:**\n` +
+      '```\n' +
+      'YourTeamName\n' +
+      `${samplePlayers}\n` +
+      '```\n' +
+      `**Rules:**\n` +
+      `• First line must be your **team name**.\n` +
+      `• Mention **exactly ${tournament.perTeam}** players (including the captain).\n` +
+      `• The **first mention** becomes the team **captain** and gets the IDP role.\n` +
+      `• Bot reacts ✅ on success and ❌ if the format is wrong.`,
+    )
+    .setFooter({ text: 'CYCLOPS Tournament System' })
+    .setTimestamp();
+
+  if (tournament.howToRegisterMessageId) {
+    const existing = await ch.messages.fetch(tournament.howToRegisterMessageId).catch(() => null);
+    if (existing) {
+      await existing.edit({ embeds: [embed] }).catch(() => {});
+      return;
+    }
+  }
+  const sent = await ch.send({ embeds: [embed] }).catch(() => null);
+  if (sent) {
+    tournament.howToRegisterMessageId = sent.id;
+    await saveGuildData(guild.id);
+  }
+}
+
 export async function processRegistration(message, data) {
   // Find tournament linked to this register-here channel
   const cat = Object.values(data.tournamentCategories).find((c) => c.channels?.['register-here'] === message.channel.id);
@@ -534,26 +581,34 @@ export async function processRegistration(message, data) {
   const tournament = Object.values(data.tournaments).find((t) => t.categoryId === cat.categoryId && t.registrationOpen);
   if (!tournament) return;
 
+  const required = tournament.perTeam;
   const mentions = Array.from(message.mentions.users.keys());
-  if (!mentions.length) return;
 
-  // First mention is captain
+  // Extract team name: any non-empty line stripped of mentions and decorative chars
+  const cleanedLines = message.content
+    .split('\n')
+    .map((l) => l.replace(/<@!?\d+>/g, '').replace(/^[\s\-=_*•|>]+|[\s\-=_*•|>]+$/g, '').trim())
+    .filter(Boolean);
+  const teamName = (cleanedLines[0] || '').slice(0, 50);
+
+  // Wrong format → cross
+  if (!teamName || mentions.length !== required) {
+    await message.react('❌').catch(() => {});
+    return;
+  }
+
+  // Tournament full → cross
+  if (tournament.slots.length >= tournament.slotsTotal) {
+    await message.react('❌').catch(() => {});
+    return;
+  }
+
   const captainId = mentions[0];
   const memberIds = mentions.slice(1);
 
-  // Team name = first line of message before mentions, or "Team <captainName>"
-  let teamName = message.content.split('\n')[0].replace(/<@!?\d+>/g, '').trim();
-  if (!teamName) teamName = `Team-${message.author.username}`;
-  teamName = teamName.slice(0, 50);
-
-  if (tournament.slots.length >= tournament.slotsTotal) {
-    message.react('❌').catch(() => {});
-    message.channel.send({ embeds: [errorEmbed(`<@${message.author.id}> Tournament **${tournament.name}** is full.`)] }).catch(() => {});
-    return;
-  }
+  // Duplicate captain → warn
   if (tournament.slots.some((s) => s.captainId === captainId)) {
-    message.react('⚠️').catch(() => {});
-    message.channel.send({ embeds: [warnEmbed(`<@${message.author.id}> You already have a slot in **${tournament.name}**.`)] }).catch(() => {});
+    await message.react('⚠️').catch(() => {});
     return;
   }
 
@@ -576,12 +631,12 @@ export async function processRegistration(message, data) {
         .addFields(
           { name: 'Team', value: teamName, inline: true },
           { name: 'Captain', value: `<@${captainId}>`, inline: true },
-          { name: 'Members', value: memberIds.length ? memberIds.map((m) => `<@${m}>`).join(', ') : '_none_', inline: false },
+          { name: 'Members', value: memberIds.map((m) => `<@${m}>`).join(', '), inline: false },
         )
         .setTimestamp()],
     }).catch(() => {});
   }
 
-  message.react('✅').catch(() => {});
+  await message.react('✅').catch(() => {});
   await refreshSlotListMessage(message.guild, data, tournament).catch(() => {});
 }
