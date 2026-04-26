@@ -126,6 +126,7 @@ export function buildHelpEmbed(section, client, guild) {
       `${divider()}\n` +
       fmt([
         [`${PREFIX}ban @user [reason]`, 'Permanently ban a user'],
+        [`${PREFIX}unban <userID> [reason]`, 'Unban a previously banned user'],
         [`${PREFIX}kick @user [reason]`, 'Kick a user from the server'],
         [`${PREFIX}mute @user 10m [reason]`, 'Timeout a user — `10s` `5m` `2h` `1d`'],
         [`${PREFIX}unmute @user`, 'Remove an active timeout'],
@@ -230,10 +231,10 @@ export function buildHelpEmbed(section, client, guild) {
     return e.setTitle('⚙️  Admin / Owner').setDescription(
       `${divider()}\n` +
       fmt([
-        [`${PREFIX}sync`, 'Re-register all slash commands instantly (server + global)'],
+        [`${PREFIX}sync`, 'Re-register slash commands to **every** server instantly (clears global duplicates)'],
       ]) +
       `\n${divider()}\n` +
-      `Use \`${PREFIX}sync\` after pulling updates so the new \`/\` commands appear immediately for everyone in this server.`,
+      `Use \`${PREFIX}sync\` after updates — commands appear **immediately** in every server, with no duplicates.`,
     );
   }
 

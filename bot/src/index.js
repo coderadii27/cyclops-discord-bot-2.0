@@ -7,6 +7,8 @@ import { PREFIX } from './config.js';
 import { handleMessage } from './events/messageCreate.js';
 import { handleInteraction } from './events/interactionCreate.js';
 import { handleGuildMemberAdd } from './events/guildMemberAdd.js';
+import { handleGuildCreate } from './events/guildCreate.js';
+import { handleGuildDelete } from './events/guildDelete.js';
 import { startReady } from './events/ready.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,8 +75,21 @@ client.on(Events.ClientReady, async (c) => {
         seen.add(data.name);
         json.push(data);
       }
-      const result = await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), { body: json });
-      console.log(`[READY] Registered ${Array.isArray(result) ? result.length : 0} slash commands.`);
+
+      // Clear global commands to avoid duplicates with guild commands
+      await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), { body: [] }).catch(() => {});
+
+      // Push to every guild for instant updates (no 1-hour propagation delay, no duplicates)
+      let ok = 0, fail = 0;
+      for (const g of c.guilds.cache.values()) {
+        try {
+          await rest.put(Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, g.id), { body: json });
+          ok++;
+        } catch (e) {
+          fail++;
+        }
+      }
+      console.log(`[READY] Registered ${json.length} slash commands to ${ok} guild(s)${fail ? ` (${fail} failed)` : ''}.`);
     } catch (e) {
       console.error('[READY] Slash registration failed:', e.message);
     }
@@ -84,6 +99,8 @@ client.on(Events.ClientReady, async (c) => {
 client.on(Events.MessageCreate, (msg) => handleMessage(msg, client).catch((e) => console.error('[messageCreate]', e)));
 client.on(Events.InteractionCreate, (interaction) => handleInteraction(interaction, client).catch((e) => console.error('[interactionCreate]', e)));
 client.on(Events.GuildMemberAdd, (member) => handleGuildMemberAdd(member, client).catch((e) => console.error('[guildMemberAdd]', e)));
+client.on(Events.GuildCreate, (guild) => handleGuildCreate(guild, client).catch((e) => console.error('[guildCreate]', e)));
+client.on(Events.GuildDelete, (guild) => handleGuildDelete(guild, client).catch((e) => console.error('[guildDelete]', e)));
 
 client.on(Events.Error, (err) => console.error('[client error]', err));
 process.on('unhandledRejection', (err) => console.error('[unhandledRejection]', err));

@@ -8,12 +8,12 @@ export default {
   description: 'Warn a user.',
   async execute({ message, args }) {
     if (!canManageMessages(message.member)) {
-      return message.reply({ embeds: [errorEmbed('You need **Manage Messages** permission.')] });
+      return message.channel.send({ embeds: [errorEmbed('You need **Manage Messages** permission.')] });
     }
     const target = message.mentions.members?.first() ||
       (args[0] ? await message.guild.members.fetch(args[0].replace(/[<@!>]/g, '')).catch(() => null) : null);
-    if (!target) return message.reply({ embeds: [errorEmbed('Mention a valid user. Usage: `?warn @user reason`')] });
-    if (target.user.bot) return message.reply({ embeds: [errorEmbed('You cannot warn a bot.')] });
+    if (!target) return message.channel.send({ embeds: [errorEmbed('Mention a valid user. Usage: `?warn @user reason`')] });
+    if (target.user.bot) return message.channel.send({ embeds: [errorEmbed('You cannot warn a bot.')] });
 
     const reason = args.slice(1).join(' ') || 'No reason provided';
     const data = getGuildData(message.guild.id);
@@ -22,7 +22,7 @@ export default {
     await saveGuildData(message.guild.id);
 
     const count = data.warnings[target.id].length;
-    await message.reply({ embeds: [warnEmbed(`⚠️ **${target.user.tag}** has been warned.\n**Reason:** ${reason}\n**Total warnings:** ${count}`, 'User Warned')] });
+    await message.channel.send({ embeds: [warnEmbed(`⚠️ **${target.user.tag}** has been warned.\n**Reason:** ${reason}\n**Total warnings:** ${count}`, 'User Warned')] });
 
     target.send({ embeds: [warnEmbed(`You were warned in **${message.guild.name}**.\n**Reason:** ${reason}\n**Total warnings:** ${count}`)] }).catch(() => {});
 

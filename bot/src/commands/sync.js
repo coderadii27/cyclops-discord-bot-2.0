@@ -16,7 +16,7 @@ export default {
       return message.reply({ embeds: [errorEmbed('Missing `DISCORD_CLIENT_ID` or `DISCORD_TOKEN`.')] });
     }
 
-    const status = await message.reply({ embeds: [warnEmbed('Re-syncing slash commands… please wait.', '🔄 Syncing')] });
+    const status = await message.reply({ embeds: [warnEmbed('Re-syncing slash commands across **all servers**… please wait.', '🔄 Syncing')] });
 
     try {
       const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
@@ -32,24 +32,26 @@ export default {
         payloads.push(json);
       }
 
-      // 1) Push to THIS guild for instant update (no 1-hour wait)
-      const guildResult = await rest.put(
-        Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, message.guild.id),
-        { body: payloads },
-      );
+      // 1) WIPE global commands so they don't appear duplicated alongside guild commands
+      await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), { body: [] });
 
-      // 2) Also push global (long-term home)
-      const globalResult = await rest.put(
-        Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
-        { body: payloads },
-      );
-
-      const guildCount = Array.isArray(guildResult) ? guildResult.length : 0;
-      const globalCount = Array.isArray(globalResult) ? globalResult.length : 0;
+      // 2) Push fresh commands to EVERY guild the bot is in (instant — no 1-hour wait)
+      let synced = 0;
+      let failed = 0;
+      const guilds = [...client.guilds.cache.values()];
+      for (const g of guilds) {
+        try {
+          await rest.put(Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, g.id), { body: payloads });
+          synced++;
+        } catch (e) {
+          console.error(`[sync] guild ${g.id} failed:`, e.message);
+          failed++;
+        }
+      }
 
       await status.edit({
         embeds: [successEmbed(
-          `Synced **${guildCount}** commands to this server (instant) and **${globalCount}** globally.\n\nServer commands are live **right now**. Global commands may take up to an hour to appear in other servers.`,
+          `Synced **${payloads.length}** commands to **${synced}** server(s)${failed ? ` (${failed} failed)` : ''}.\n\nGlobal duplicates have been **cleared**. Commands are live **right now** on every server.`,
           '✅ Slash Commands Synced',
         )],
       });

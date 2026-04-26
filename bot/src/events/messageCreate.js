@@ -1,4 +1,4 @@
-import { PREFIX } from '../config.js';
+import { PREFIX, SILENT_MOD_COMMANDS } from '../config.js';
 import { getGuildData, saveGuildData } from '../storage.js';
 import { errorEmbed, infoEmbed } from '../utils/embeds.js';
 import { formatDuration } from '../utils/parseDuration.js';
@@ -62,6 +62,12 @@ export async function handleMessage(message, client) {
 
   const cmd = client.prefixCommands.get(cmdName);
   if (!cmd) return;
+
+  // Auto-delete invocation message for silent mod commands
+  const realName = cmd.name || cmdName;
+  if (SILENT_MOD_COMMANDS.has(realName)) {
+    message.delete().catch(() => {});
+  }
 
   try {
     await cmd.execute({ message, args, client });

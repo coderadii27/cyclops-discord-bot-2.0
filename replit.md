@@ -52,9 +52,17 @@ Pure JavaScript (ESM) Discord bot built with discord.js v14.
 
 **Persistent storage:** JSON files in `bot/data/<guildId>.json` (one file per guild).
 
-**Prefix commands (`?`):** ban, kick, mute, unmute, warn, warning, afk, purge, say, stick, stickinfo, lock, unlock, ping, setnick, mc, setup, t, help
+**Prefix commands (`?`):** ban, unban, kick, mute, unmute, warn, warning, afk, purge, say, stick, stickinfo, lock, unlock, ping, setnick, mc, setup, t, help, sync
 
-**Slash commands (`/`):** modlog, greet, greetdm, gstart, gend, memes, botinfo, nuke, idpdmcaptains, slot-list
+**Slash commands (`/`):** modlog, greet, greetdm, gstart, gend, memes, botinfo, nuke, idpdmcaptains, slot-list, ticketsetup
+
+**Slash command registration:** On `READY` and via `?sync`, the bot **clears all global commands** and pushes commands to **every guild** the bot is in. This avoids the 1-hour global propagation delay and prevents duplicate commands appearing in the picker.
+
+**Silent mod commands:** `ban`, `unban`, `kick`, `mute`, `unmute`, `warn`, `warning` auto-delete the user's invocation message (configured in `bot/src/config.js → SILENT_MOD_COMMANDS`).
+
+**Guild join/leave DMs:** On `GuildCreate`, the bot DMs the inviter (resolved via audit logs `BotAdd`, falling back to the guild owner) a welcome message with **Invite** + **Support Server** link buttons. On `GuildDelete`, it DMs the owner a regretful goodbye with **Re-invite** + **Support Server** buttons.
+
+**Ticket system:** `/ticketsetup` posts a panel; users click **Open Ticket** → private channel with staff role, **Claim** button assigns staff, **Close** button deletes the channel after 5s.
 
 **Tournament flow:**
 1. Admin runs `?setup` — creates `cyclops-turney-mod` and `idp-access` roles.

@@ -2,7 +2,43 @@ import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, But
 import { COLORS } from '../config.js';
 import { errorEmbed, successEmbed } from '../utils/embeds.js';
 import { getGuildData, saveGuildData } from '../storage.js';
-import { parseDuration, formatDuration } from '../utils/parseDuration.js';
+import { parseDuration } from '../utils/parseDuration.js';
+
+const GVWY = '🎉';
+const PRIZE = '🏆';
+const DOT = '<:dot:0>'; // visual placeholder, replaced below
+const BULLET = '•';
+
+function buildGiveawayEmbed(g, entriesCount) {
+  const endsAtSec = Math.floor(g.endsAt / 1000);
+  const date = new Date(g.endsAt);
+  const dateStr = date.toLocaleString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+
+  return new EmbedBuilder()
+    .setColor(g.ended ? COLORS.DARK : COLORS.PINK)
+    .setAuthor({ name: g.ended ? `${GVWY} Giveaway Ended ${GVWY}` : `${GVWY} New Giveaway ${GVWY}` })
+    .setTitle(`${PRIZE}  ${g.prize}  ${PRIZE}`)
+    .setDescription(
+      `${BULLET} **Winners:** ${g.winners}\n` +
+      `${BULLET} **Ends:** <t:${endsAtSec}:R> (${dateStr})\n` +
+      `${BULLET} **Hosted by:** <@${g.hostId}>\n\n` +
+      (g.ended
+        ? `**This giveaway has ended.**`
+        : `${BULLET} Click the **${GVWY}** button below to participate!\n${BULLET} **Entries:** \`${entriesCount}\``),
+    )
+    .setFooter({ text: 'Ends at' })
+    .setTimestamp(g.endsAt);
+}
+
+function buildGiveawayRow(entriesCount, ended) {
+  const enter = new ButtonBuilder()
+    .setCustomId('giveaway:enter')
+    .setEmoji(GVWY)
+    .setLabel(ended ? 'Ended' : `${entriesCount}`)
+    .setStyle(ended ? ButtonStyle.Secondary : ButtonStyle.Success)
+    .setDisabled(ended);
+  return new ActionRowBuilder().addComponents(enter);
+}
 
 export default {
   name: 'gstart',
@@ -18,26 +54,13 @@ export default {
       return interaction.reply({ embeds: [errorEmbed('You need **Manage Server** permission.')], ephemeral: true });
     }
     const dur = parseDuration(interaction.options.getString('duration'));
-    if (!dur) return interaction.reply({ embeds: [errorEmbed('Invalid duration.')], ephemeral: true });
+    if (!dur) return interaction.reply({ embeds: [errorEmbed('Invalid duration. Try `1h`, `30m`, `2d`.')], ephemeral: true });
     const winners = interaction.options.getInteger('winners');
     const prize = interaction.options.getString('prize');
     const endsAt = Date.now() + dur;
 
-    const embed = new EmbedBuilder()
-      .setColor(COLORS.PINK)
-      .setTitle('🎉 GIVEAWAY 🎉')
-      .setDescription(`**Prize:** ${prize}\n**Winners:** ${winners}\n**Ends:** <t:${Math.floor(endsAt / 1000)}:R>\n**Hosted by:** ${interaction.user}\n\nClick the button below to enter!`)
-      .setFooter({ text: 'CYCLOPS Giveaways' })
-      .setTimestamp(endsAt);
-
-    const button = new ButtonBuilder().setCustomId('giveaway:enter').setLabel('Enter Giveaway').setStyle(ButtonStyle.Success).setEmoji('🎉');
-
-    await interaction.reply({ embeds: [embed], components: [new ActionRowBuilder().addComponents(button)] });
-    const reply = await interaction.fetchReply();
-
-    const data = getGuildData(interaction.guild.id);
-    data.giveaways[reply.id] = {
-      id: reply.id,
+    const g = {
+      id: 'pending',
       channelId: interaction.channel.id,
       prize,
       winners,
@@ -46,6 +69,16 @@ export default {
       entries: [],
       ended: false,
     };
+
+    await interaction.reply({
+      embeds: [buildGiveawayEmbed(g, 0)],
+      components: [buildGiveawayRow(0, false)],
+    });
+    const reply = await interaction.fetchReply();
+    g.id = reply.id;
+
+    const data = getGuildData(interaction.guild.id);
+    data.giveaways[reply.id] = g;
     await saveGuildData(interaction.guild.id);
 
     scheduleGiveawayEnd(client, interaction.guild.id, reply.id, dur);
@@ -81,12 +114,18 @@ export async function endGiveaway(client, guildId, msgId, manual) {
 
   const winnerText = winners.length ? winners.map((id) => `<@${id}>`).join(', ') : '_no entries_';
   const embed = new EmbedBuilder()
-    .setColor(COLORS.PINK)
-    .setTitle('🎉 GIVEAWAY ENDED 🎉')
-    .setDescription(`**Prize:** ${g.prize}\n**Winners:** ${winnerText}\n**Hosted by:** <@${g.hostId}>${manual ? '\n_(ended manually)_' : ''}`)
+    .setColor(COLORS.GOLD)
+    .setAuthor({ name: '🎊 Giveaway Ended 🎊' })
+    .setTitle(`🏆  ${g.prize}  🏆`)
+    .setDescription(
+      `**Winners:** ${winnerText}\n` +
+      `**Hosted by:** <@${g.hostId}>\n` +
+      `**Total Entries:** \`${g.entries.length}\`` +
+      (manual ? '\n_(ended manually)_' : ''),
+    )
     .setTimestamp();
 
-  if (msg) await msg.edit({ embeds: [embed], components: [] }).catch(() => {});
+  if (msg) await msg.edit({ embeds: [embed], components: [buildGiveawayRow(g.entries.length, true)] }).catch(() => {});
   if (winners.length) {
     await channel.send({ content: `🎊 Congratulations ${winners.map((id) => `<@${id}>`).join(', ')}! You won **${g.prize}**!` }).catch(() => {});
   } else {
@@ -100,12 +139,22 @@ export async function handleGiveawayButton(interaction) {
   const g = data.giveaways[interaction.message.id];
   if (!g) return interaction.reply({ embeds: [errorEmbed('Giveaway not found.')], ephemeral: true });
   if (g.ended) return interaction.reply({ embeds: [errorEmbed('Giveaway has ended.')], ephemeral: true });
+
+  let response;
   if (g.entries.includes(interaction.user.id)) {
     g.entries = g.entries.filter((id) => id !== interaction.user.id);
-    await saveGuildData(interaction.guild.id);
-    return interaction.reply({ embeds: [successEmbed('You have left the giveaway.')], ephemeral: true });
+    response = successEmbed('You have **left** the giveaway.');
+  } else {
+    g.entries.push(interaction.user.id);
+    response = successEmbed(`✅ You have entered the **${g.prize}** giveaway!\nEnds <t:${Math.floor(g.endsAt / 1000)}:R>`);
   }
-  g.entries.push(interaction.user.id);
   await saveGuildData(interaction.guild.id);
-  return interaction.reply({ embeds: [successEmbed(`✅ You have entered the **${g.prize}** giveaway!\nEnds <t:${Math.floor(g.endsAt / 1000)}:R>`)], ephemeral: true });
+
+  // Update the original message with new entry count
+  await interaction.message.edit({
+    embeds: [buildGiveawayEmbed(g, g.entries.length)],
+    components: [buildGiveawayRow(g.entries.length, false)],
+  }).catch(() => {});
+
+  return interaction.reply({ embeds: [response], ephemeral: true });
 }

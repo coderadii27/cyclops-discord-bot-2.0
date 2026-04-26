@@ -14,7 +14,14 @@ export const COLORS = {
 export const BOT_INFO = {
   CREATOR: 'Aditya',
   CREATED_ON: 'April 2026',
+  INVITE_URL: 'https://discord.com/oauth2/authorize?client_id=1496767620794417182',
+  SUPPORT_SERVER_URL: 'https://discord.gg/Qx7bgTSHyZ',
 };
+
+// Mod commands whose invocation message should be auto-deleted
+export const SILENT_MOD_COMMANDS = new Set([
+  'ban', 'unban', 'kick', 'mute', 'unmute', 'warn', 'warning',
+]);
 
 export const ANIMATED_TICK = '<a:tick:1234567890123456789>';
 export const FALLBACK_TICK = '✓';
